@@ -22,4 +22,12 @@ describe('Test for RedisStream', () => {
     console.log('Stream returned for the given key:', JSON.stringify(res));
     expect(res).toBeTruthy();
   });
+
+  test('Subscription check:', async () => {
+    const res = await redis.subscribe('key1', (v) =>
+      console.log('SUBSCRIPTION_RESPONSE', v)
+    );
+    console.log('Stream returned for the given key:', JSON.stringify(res));
+    expect(res).toBeTruthy();
+  });
 });
