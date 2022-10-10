@@ -1,4 +1,4 @@
-# nest-stream-cli
+# redis-stream-client
 
 This library was generated with [Nx](https://nx.dev).
 

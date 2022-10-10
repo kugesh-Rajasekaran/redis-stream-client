@@ -1,4 +1,5 @@
-import { RedisStream } from './redis-stream-client.main';
+import { RedisStream } from './main';
+import { StreamHandler } from './util';
 
 describe('Test for RedisStream', () => {
   const redis = RedisStream.getInstance();
@@ -24,7 +25,7 @@ describe('Test for RedisStream', () => {
   });
 
   test('Subscription check:', async () => {
-    const res = await redis.subscribe('key1', (v) =>
+    const res = redis.subscribe('key1', (v: Parameters<StreamHandler>[0]) =>
       console.log('SUBSCRIPTION_RESPONSE', v)
     );
     console.log('Stream returned for the given key:', JSON.stringify(res));
