@@ -1,7 +1,9 @@
-# redis-stream-client
+# Redis Streams Client
 
-This library was generated with [Nx](https://nx.dev).
+This library is solely intended for redis streams.
 
-## Running unit tests
+### Features
 
-Run `nx test redis-stream-client` to execute the unit tests.
+- Acts as an abstraction layer between Javascript and Redis language
+- Provides creating, reading and subscribing to a stream
+- Provides single redis connection (Singleton)
