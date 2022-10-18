@@ -88,13 +88,14 @@ export class RedisStream {
     streamIdToStartFrom: string,
     secToEnd: number
   ) {
-    const startedTime = new Date().getTime();
+    let startedTime = new Date().getTime();
     const timeLimit = new Date(startedTime + secToEnd * _1_sec).getTime();
     while (startedTime < timeLimit) {
       await (this._redis as Redis)
         .xread('BLOCK', 0, 'STREAMS', streamKey, streamIdToStartFrom)
         .then((v) => this.frameResponseStream(v))
         .then(streamHandler);
+      startedTime = new Date().getTime();
     }
   }
 
