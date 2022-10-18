@@ -17,7 +17,7 @@ export class RedisStream {
   }
 
   connect(): this {
-    this._redis = new Redis(this._path, { port: this._port }) as Redis;
+    this._redis = new Redis(this._path, { port: this._port });
     return this;
   }
 
@@ -76,6 +76,10 @@ export class RedisStream {
       secToEnd
     );
     return this;
+  }
+
+  deleteByKey(streamKey: string, idsToDelete: string[]): Promise<number> {
+    return (this._redis as Redis).xdel(streamKey, ...idsToDelete);
   }
 
   private async _actionForSubscription(
