@@ -12,6 +12,10 @@ export class RedisStream {
     );
   }
 
+  get redisIO() {
+    return this._redis;
+  }
+
   private constructor(private _path = 'localhost', private _port = 6379) {
     this.connect();
   }
@@ -51,9 +55,10 @@ export class RedisStream {
     streamKey: string,
     streamIdToStartFrom: string = '0' /* returns all the stream */
   ) {
+    console.log('from read', this);
     return (this._redis as Redis)
       .xread('STREAMS', streamKey, streamIdToStartFrom)
-      .then(this.frameResponseStream);
+      .then(this.frameResponseStream.bind(this));
   }
 
   /**
@@ -67,7 +72,7 @@ export class RedisStream {
     streamKey: string,
     streamHandler: StreamHandler /* callback function to execute when a new stream delivered */,
     streamIdToStartFrom: string = '$',
-    secToEnd: number = 1000
+    secToEnd: number = 100000
   ) {
     this._actionForSubscription(
       streamKey,
@@ -103,6 +108,7 @@ export class RedisStream {
     stream: [key: string, items: [id: string, fields: string[]][]][] | null
   ) {
     if (!stream) return stream;
+    console.log('STREAM', JSON.stringify(stream), this);
     return [
       {
         streamKey: stream[0][0],
