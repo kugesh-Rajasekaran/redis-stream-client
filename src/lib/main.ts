@@ -68,13 +68,13 @@ export class RedisStream {
    * @param secToEnd Time limit till you want to listen
    * @returns
    */
-  subscribe(
+  subscribe<T>(
     streamKey: string,
-    streamHandler: StreamHandler /* callback function to execute when a new stream delivered */,
+    streamHandler: StreamHandler<T> /* callback function to execute when a new stream delivered */,
     streamIdToStartFrom: string = '$',
     secToEnd: number = 100000
   ) {
-    this._actionForSubscription(
+    this._actionForSubscription<T>(
       streamKey,
       streamHandler,
       streamIdToStartFrom,
@@ -87,9 +87,9 @@ export class RedisStream {
     return (this._redis as Redis).xdel(streamKey, ...idsToDelete);
   }
 
-  private async _actionForSubscription(
+  private async _actionForSubscription<T>(
     streamKey: string,
-    streamHandler: StreamHandler,
+    streamHandler: StreamHandler<T>,
     streamIdToStartFrom: string,
     secToEnd: number
   ) {
@@ -99,16 +99,17 @@ export class RedisStream {
       await (this._redis as Redis)
         .xread('BLOCK', 0, 'STREAMS', streamKey, streamIdToStartFrom)
         .then((v) => this.frameResponseStream(v))
-        .then(streamHandler);
+        .then(streamHandler as any);
       startedTime = new Date().getTime();
     }
   }
+
+  
 
   private frameResponseStream(
     stream: [key: string, items: [id: string, fields: string[]][]][] | null
   ) {
     if (!stream) return stream;
-    console.log('STREAM', JSON.stringify(stream), this);
     return [
       {
         streamKey: stream[0][0],
