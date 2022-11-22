@@ -1,9 +1,18 @@
-import Redis, { RedisValue } from 'ioredis';
-import { _1_sec, standalonePrimitives, StreamHandler } from './util';
+import Redis, { ChainableCommander, RedisValue } from 'ioredis';
+import {
+  _1_sec,
+  standalonePrimitives,
+  StreamHandler,
+  streamOutputToJsonFramer,
+  StreamMethods,
+  AddType,
+  ReadType,
+} from './util';
 
 export class RedisStream {
   private static _instance: RedisStream | undefined;
   private _redis: Redis | undefined;
+  private _pipeline: ChainableCommander | undefined;
 
   static getInstance(path?: string, port?: number) {
     return (
@@ -22,6 +31,7 @@ export class RedisStream {
 
   connect(): this {
     this._redis = new Redis(this._path, { port: this._port });
+    this._pipeline = this._redis.pipeline();
     return this;
   }
 
@@ -59,6 +69,36 @@ export class RedisStream {
     return (this._redis as Redis)
       .xread('STREAMS', streamKey, streamIdToStartFrom)
       .then(this.frameResponseStream.bind(this));
+  }
+
+  pRead(
+    streamKey: string,
+    streamIdToStartFrom: string = '0' /* returns all the stream */
+  ) {
+    console.log('from read', this);
+    (this._pipeline as ChainableCommander).xread(
+      'STREAMS',
+      streamKey,
+      streamIdToStartFrom
+    );
+    return this;
+  }
+
+  async executePipeline() {
+    return (this._pipeline as ChainableCommander).exec().then((response) => {
+      return (
+        this._pipeline as unknown as { _queue: { name: string }[] }
+      )._queue.map((command, ind: number) =>
+        streamOutputToJsonFramer[command.name as StreamMethods]?.(
+          response?.[ind] as AddType & ReadType
+        )
+      );
+    });
+  }
+
+  clearPipeline() {
+    (this._pipeline as unknown as { _queue: any[] })._queue = [];
+    return this;
   }
 
   /**
@@ -103,8 +143,6 @@ export class RedisStream {
       startedTime = new Date().getTime();
     }
   }
-
-  
 
   private frameResponseStream(
     stream: [key: string, items: [id: string, fields: string[]][]][] | null
