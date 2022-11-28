@@ -65,7 +65,6 @@ export class RedisStream {
     streamKey: string,
     streamIdToStartFrom: string = '0' /* returns all the stream */
   ) {
-    console.log('from read', this);
     return (this._redis as Redis)
       .xread('STREAMS', streamKey, streamIdToStartFrom)
       .then(this.frameResponseStream.bind(this));
@@ -75,7 +74,6 @@ export class RedisStream {
     streamKey: string,
     streamIdToStartFrom: string = '0' /* returns all the stream */
   ) {
-    console.log('from read', this);
     (this._pipeline as ChainableCommander).xread(
       'STREAMS',
       streamKey,
@@ -84,12 +82,17 @@ export class RedisStream {
     return this;
   }
 
-  async executePipeline() {
+  pGetAll(streamKey: string) {
+    (this._pipeline as ChainableCommander).hgetall(streamKey);
+    return this;
+  }
+
+  async executePipeline<ValueType extends { [key: string]: string }>() {
     return (this._pipeline as ChainableCommander).exec().then((response) => {
       return (
         this._pipeline as unknown as { _queue: { name: string }[] }
       )._queue.map((command, ind: number) =>
-        streamOutputToJsonFramer[command.name as StreamMethods]?.(
+        streamOutputToJsonFramer[command.name as StreamMethods]?.<ValueType>(
           response?.[ind] as AddType & ReadType
         )
       );

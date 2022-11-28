@@ -35,11 +35,11 @@ describe('Test for RedisStream', () => {
   });
 
   test('Pipeline check:', async () => {
-    await redis.redisIO
-      ?.pipeline()
-      ?.xadd('key_1', '*', 'randomKey1', 'randomValue1')
-      ?.xadd('key_2', '*', 'randomKey2', 'randomValue2')
-      ?.xadd('key_3', '*', 'randomKey3', 'randomValue3');
+    // await redis.redisIO
+    //   ?.pipeline()
+    //   ?.xadd('key_1', '*', 'randomKey1', 'randomValue1')
+    //   ?.xadd('key_2', '*', 'randomKey2', 'randomValue2')
+    //   ?.xadd('key_3', '*', 'randomKey3', 'randomValue3');
     const pipeline = await redis
       .pRead('key_1')
       .pRead('key_2')
@@ -50,6 +50,24 @@ describe('Test for RedisStream', () => {
       JSON.stringify(await pipeline)
     );
     expect(!!pipeline).toBeTruthy();
+  });
+
+  test('Hash check:', async () => {
+    await redis.redisIO?.hset('key_11', { name: 'kugesh', age: 12 });
+    await redis.redisIO?.hset('key_22', { name: 'surf', age: 3 });
+    await redis.redisIO?.hset('key_33', { name: 'rakesh', age: 45 });
+
+    const response = await redis.redisIO
+      ?.pipeline()
+      .hgetall('key_22')
+      .hgetall('key_33')
+      .exec();
+
+    console.log(
+      'Stream returned for the given key:',
+      JSON.stringify(await response)
+    );
+    // expect(!!pipeline).toBeTruthy();
   });
 
   // test('Pipeline check:', async () => {
